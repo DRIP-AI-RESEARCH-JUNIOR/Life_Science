@@ -35,6 +35,19 @@ class Ui_MainWindow(object):
         self.scrollAreaWidgetContents.setObjectName("scrollAreaWidgetContents")
         self.verticalLayout_2 = QtWidgets.QVBoxLayout(self.scrollAreaWidgetContents)
         self.verticalLayout_2.setObjectName("verticalLayout_2")
+
+        self.label_Trajectory = QtWidgets.QLabel(self.scrollAreaWidgetContents)
+        self.label_Trajectory.setMinimumSize(QtCore.QSize(0, 30))
+        font = QtGui.QFont()
+        font.setPointSize(10)
+        self.label_Trajectory.setFont(font)
+        self.label_Trajectory.setObjectName("label_Trajectory")
+        self.verticalLayout_2.addWidget(self.label_Trajectory)
+        self.trajectory = MplWidget(self.scrollAreaWidgetContents)
+        self.trajectory.setMinimumSize(QtCore.QSize(0, 800))
+        self.trajectory.setObjectName("bbox")
+        self.verticalLayout_2.addWidget(self.trajectory)
+
         self.label_speed = QtWidgets.QLabel(self.scrollAreaWidgetContents)
         self.label_speed.setMinimumSize(QtCore.QSize(0, 30))
         font = QtGui.QFont()
@@ -166,6 +179,7 @@ class Ui_MainWindow(object):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowIcon(QtGui.QIcon('images/drip.ico'))
         MainWindow.setWindowTitle(_translate("MainWindow", "DRIP"))
+        self.label_Trajectory.setText(_translate("MainWindow", "Trajectory"))
         self.label_speed.setText(_translate("MainWindow", "Average Speed"))
         self.label_locomtion.setText(_translate("MainWindow", "Average Locomtion"))
         self.label_bending.setText(_translate("MainWindow", "Bending"))
@@ -176,6 +190,13 @@ class Ui_MainWindow(object):
         self.label_linSpread.setText(_translate("MainWindow", "Linear Spread"))
         self.pushButton.setText(_translate("MainWindow", "Upload"))
         self.process.setText(_translate("MainWindow", "Plot"))
+
+    def trajectory_map(self, fig, x_list, y_list, expNo):
+        fig.canvas.axes.clear()
+        for xitem, yitem in zip(x_list, y_list):
+            fig.canvas.axes.plot(xitem, yitem)
+        fig.canvas.axes.legend(expNo)
+        fig.canvas.draw()
 
     def update_graph(self, fig, x, y, z):
         fig.canvas.axes.clear()
@@ -206,6 +227,7 @@ class Ui_MainWindow(object):
         fig.canvas.draw()
 
     def plot(self):
+        self.trajectory_map(self.trajectory, self.xList, self.yList, self.expNo)
         self.update_graph(self.avgSpeed, self.expNo, self.avgSpeedVal, None)
         self.update_graph(self.avgLocomotion, self.expNo, self.avgDistVal, None)
         self.update_graph(self.pause, self.expNo, self.pauseCount, None)
@@ -230,10 +252,14 @@ class Ui_MainWindow(object):
         self.rad_spread = []
         self.pos_lin_spread = []
         self.neg_lin_spread = []
+        self.xList = []
+        self.yList = []
         for item in fname:
             self.expNo.append(item.split("/")[-1].replace(".mat", ""))
             final_list, max_rad, bbox = conv(item)
             pause_count, avg_dist, avg_speed, linear_count, bend_count, avg_pos_angle, avg_neg_angle, bbox_area, rad_spread_count, pos_lin_count, neg_lin_count = calc(final_list, max_rad, bbox)
+            self.xList.append([coord[1] for coord in final_list])
+            self.yList.append([coord[2] for coord in final_list])
             self.avgSpeedVal.append(avg_speed)
             self.avgDistVal.append(avg_dist)
             self.pauseCount.append(pause_count)
