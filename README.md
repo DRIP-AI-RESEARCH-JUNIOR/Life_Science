@@ -1,7 +1,9 @@
 # Drip Life Science GUI 
 
-![Works with Windows](https://img.shields.io/badge/Works_with-Windows-blue?style=flat-square)
+![Works with Windows](https://img.shields.io/badge/Works_with-Win-blue?style=flat-square)
 [![All Contributors](https://img.shields.io/badge/all_contributors-2-orange.svg?style=flat-square)](#contributors-)
+
+![](./images/cover.png)
 
 ## 📌 Prerequisites
 - Windows 10
