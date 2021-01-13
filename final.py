@@ -45,7 +45,7 @@ class Ui_MainWindow(object):
         self.verticalLayout_2.addWidget(self.label_Trajectory)
         self.trajectory = MplWidget(self.scrollAreaWidgetContents)
         self.trajectory.setMinimumSize(QtCore.QSize(0, 800))
-        self.trajectory.setObjectName("bbox")
+        self.trajectory.setObjectName("trajectory")
         self.verticalLayout_2.addWidget(self.trajectory)
 
         self.label_speed = QtWidgets.QLabel(self.scrollAreaWidgetContents)
