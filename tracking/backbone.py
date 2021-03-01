@@ -128,3 +128,25 @@ class ResNet22W(nn.Module):
 
         return x
 
+# for RPN++
+def resnet18(**kwargs):
+    """Constructs a ResNet-18 model.
+    """
+    model = ResNetPP(BasicBlock, [2, 2, 2, 2], **kwargs)
+    return model
+
+
+# for RPN++
+def resnet34(**kwargs):
+    """Constructs a ResNet-34 model.
+    """
+    model = ResNetPP(BasicBlock, [3, 4, 6, 3], **kwargs)
+    return model
+
+
+# for RPN++
+def resnet50(**kwargs):
+    """Constructs a ResNet-50 model.
+    """
+    model = ResNetPP(Bottleneck, [3, 4, 6, 3], **kwargs)
+    return model
