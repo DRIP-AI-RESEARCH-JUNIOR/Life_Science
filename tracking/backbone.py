@@ -35,3 +35,4 @@ class AlexNet(nn.Module):
     def forward(self, x):
         x = self.feature(x)
         return x
+
