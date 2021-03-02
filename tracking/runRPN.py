@@ -134,3 +134,54 @@ def tracker_eval(net, x_crop, target_pos, target_sz, window, scale_z, p):
     target_pos = np.array([res_x, res_y])
     target_sz = np.array([res_w, res_h])
     return target_pos, target_sz, score[best_pscore_id]
+
+
+def SiamRPN_init(im, target_pos, target_sz, net, net_name):
+    state = dict()
+    if 'SiamRPNPP' in net_name:
+        p = TrackerConfig_SiamRPNPP()
+    else:
+        p = TrackerConfig()
+    p.update(net.cfg)
+    state['im_h'] = im.shape[0]
+    state['im_w'] = im.shape[1]
+
+    if p.adaptive:
+        if ((target_sz[0] * target_sz[1]) / float(state['im_h'] * state['im_w'])) < 0.004:
+            p.instance_size = 287  # small object big search region
+        else:
+            p.instance_size = 255
+
+        # p.score_size = (p.instance_size - p.exemplar_size) / p.total_stride + 1
+
+    p.anchor = generate_anchor(p.total_stride, p.scales, p.ratios, int(p.score_size))
+
+    avg_chans = np.mean(im, axis=(0, 1))
+
+    wc_z = target_sz[0] + p.context_amount * sum(target_sz)
+    hc_z = target_sz[1] + p.context_amount * sum(target_sz)
+    s_z = round(np.sqrt(wc_z * hc_z))
+    # initialize the exemplar
+    z_crop = get_subwindow_tracking(im, target_pos, p.exemplar_size, s_z, avg_chans, out_mode='np')
+
+    transform = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                             std=[0.229, 0.224, 0.225])])
+    z = Variable(transform(z_crop).unsqueeze(0))
+
+    net.temple(z.cuda())
+
+    if p.windowing == 'cosine':
+        window = np.outer(np.hanning(p.score_size), np.hanning(p.score_size))
+    elif p.windowing == 'uniform':
+        window = np.ones((p.score_size, p.score_size))
+    window = np.tile(window.flatten(), p.anchor_num)
+
+    state['p'] = p
+    state['net'] = net
+    state['avg_chans'] = avg_chans
+    state['window'] = window
+    state['target_pos'] = target_pos
+    state['target_sz'] = target_sz
+    return state
