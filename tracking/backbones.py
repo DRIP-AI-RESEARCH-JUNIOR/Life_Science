@@ -1,7 +1,12 @@
 import torch
-from torch inport nn
+import torch.nn as nn
+from torchvision import models
+import torch.nn.functional as F
+from .basic_blocks import Bottleneck_CI, Bottleneck_BIG_CI, ResNet, Inception, InceptionM, ResNeXt, ResNetPP, BasicBlock, Bottleneck
 
-from basic_blocks import *
+
+eps = 1e-5
+
 
 class AlexNet(nn.Module):
     """
@@ -35,6 +40,7 @@ class AlexNet(nn.Module):
     def forward(self, x):
         x = self.feature(x)
         return x
+
 
 class Vgg(nn.Module):
     """
@@ -73,6 +79,7 @@ class Vgg(nn.Module):
     def forward(self, x):
         x = self.features(x)
         return x
+
 
 class ResNet22(nn.Module):
     """
@@ -128,9 +135,11 @@ class ResNet22W(nn.Module):
 
         return x
 
+
 # for RPN++
 def resnet18(**kwargs):
     """Constructs a ResNet-18 model.
+
     """
     model = ResNetPP(BasicBlock, [2, 2, 2, 2], **kwargs)
     return model
@@ -139,6 +148,7 @@ def resnet18(**kwargs):
 # for RPN++
 def resnet34(**kwargs):
     """Constructs a ResNet-34 model.
+
     """
     model = ResNetPP(BasicBlock, [3, 4, 6, 3], **kwargs)
     return model
@@ -147,6 +157,7 @@ def resnet34(**kwargs):
 # for RPN++
 def resnet50(**kwargs):
     """Constructs a ResNet-50 model.
+
     """
     model = ResNetPP(Bottleneck, [3, 4, 6, 3], **kwargs)
     return model
