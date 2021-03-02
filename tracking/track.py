@@ -105,15 +105,19 @@ if __name__=="__main__":
 
         res = [int(l) for l in res]
         # print(res)
-        cv2.rectangle(im, (res[0], res[1]), (res[0] + res[2], res[1] + res[3]), (0, 255, 255), 3)
+        
         center = (int(res[0] + res[2]/2), int(res[1] + res[3]/2))
 
-        weight_img = cv2.line(weight_img, temp, center, (0, 0, 255), 5)
+        
         #centers.append(center)
         #save_path = 'bio_frames_tracked/tracked_{}.png'.format(f)
-        im = cv2.addWeighted(im, 1, weight_img, 1, 0)
+        
 
         if cfg["output_video"]:
+            cv2.rectangle(im, (res[0], res[1]), (res[0] + res[2], res[1] + res[3]), (0, 255, 255), 3)
+            weight_img = cv2.line(weight_img, temp, center, (0, 0, 255), 5)
+            im = cv2.addWeighted(im, 1, weight_img, 1, 0)
+            
             writer.write(im)
         #cv2.imwrite(save_path, im)
 
