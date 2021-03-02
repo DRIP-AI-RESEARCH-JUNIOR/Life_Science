@@ -185,3 +185,39 @@ def SiamRPN_init(im, target_pos, target_sz, net, net_name):
     state['target_pos'] = target_pos
     state['target_sz'] = target_sz
     return state
+
+
+def SiamRPN_track(state, im):
+    p = state['p']
+    net = state['net']
+    avg_chans = state['avg_chans']
+    window = state['window']
+    target_pos = state['target_pos']
+    target_sz = state['target_sz']
+
+    wc_z = target_sz[1] + p.context_amount * sum(target_sz)
+    hc_z = target_sz[0] + p.context_amount * sum(target_sz)
+    s_z = np.sqrt(wc_z * hc_z)
+    scale_z = p.exemplar_size / s_z
+    d_search = (p.instance_size - p.exemplar_size) / 2
+    pad = d_search / scale_z
+    s_x = s_z + 2 * pad
+
+    # extract scaled crops for search region x at previous target position
+    x_crop = get_subwindow_tracking(im, target_pos, p.instance_size, round(s_x), avg_chans, out_mode='np')
+
+    transform = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                             std=[0.229, 0.224, 0.225])])
+    x_crop = Variable(transform(x_crop).unsqueeze(0))
+
+    target_pos, target_sz, score = tracker_eval(net, x_crop.cuda(), target_pos, target_sz * scale_z, window, scale_z, p)
+    target_pos[0] = max(0, min(state['im_w'], target_pos[0]))
+    target_pos[1] = max(0, min(state['im_h'], target_pos[1]))
+    target_sz[0] = max(10, min(state['im_w'], target_sz[0]))
+    target_sz[1] = max(10, min(state['im_h'], target_sz[1]))
+    state['target_pos'] = target_pos
+    state['target_sz'] = target_sz
+    state['score'] = score
+    return state
