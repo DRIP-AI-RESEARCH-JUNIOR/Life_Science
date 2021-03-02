@@ -12,3 +12,4 @@ from .utils import load_pretrain
 
 __all__ = ['SiamFC_', 'SiamFC', 'SiamVGG', 'SiamFCRes22', 'SiamFCIncep22', 'SiamFCNext22', 'SiamFCRes22W',
            'SiamRPN', 'SiamRPNVGG', 'SiamRPNRes22', 'SiamRPNIncep22', 'SiamRPNResNeXt22', 'SiamRPNPP']
+
