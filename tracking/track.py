@@ -120,3 +120,6 @@ if __name__=="__main__":
         temp = center
     #print('Tracking Speed {:.1f}fps'.format((len(image_files)-1)/(toc/cv2.getTickFrequency())))
     writer.release() 
+
+    save_csv = file_name.split('.')[0] + '.csv'
+    df.to_csv(save_csv)
