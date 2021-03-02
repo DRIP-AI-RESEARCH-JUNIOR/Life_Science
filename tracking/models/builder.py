@@ -115,3 +115,53 @@ class SiamVGG(nn.Module):
             elif isinstance(m, nn.BatchNorm2d):
                 m.weight.data.fill_(1)
                 m.bias.data.zero_()
+
+                
+class SiamFCRes22(SiamFC_):
+    def __init__(self, **kwargs):
+        super(SiamFCRes22, self).__init__(**kwargs)
+        self.features = ResNet22()
+        self.head = Corr_Up()
+        self.criterion = nn.BCEWithLogitsLoss()
+
+    def _cls_loss(self, pred, label, select):
+        if len(select.size()) == 0: return 0
+        pred = torch.index_select(pred, 0, select)
+        label = torch.index_select(label, 0, select)
+        return self.criterion(pred, label)  # the same as tf version
+
+    def _weighted_BCE(self, pred, label):
+        label[label == -1] = 0  # be careful, because when loading data, the label is -1 or 1.
+                                # it is suitable for SoftMarginLoss, but not suitable for BCEWithLogitsLoss.
+        pred = pred.view(-1)
+        label = label.view(-1)
+        pos = Variable(label.data.eq(1).nonzero().squeeze()).cuda()
+        neg = Variable(label.data.eq(0).nonzero().squeeze()).cuda()
+
+        loss_pos = self._cls_loss(pred, label, pos)
+        loss_neg = self._cls_loss(pred, label, neg)
+        return loss_pos * 0.5 + loss_neg * 0.5
+
+    def train_loss(self, pred, label):
+        return torch.mean(self._weighted_BCE(pred, label))
+
+
+class SiamFCIncep22(SiamFCRes22):
+    def __init__(self, **kwargs):
+        super(SiamFCIncep22, self).__init__(**kwargs)
+        self.features = Incep22()
+        # self.head = Corr_Up()
+
+
+class SiamFCNext22(SiamFCRes22):
+    def __init__(self, **kwargs):
+        super(SiamFCNext22, self).__init__(**kwargs)
+        self.features = ResNeXt22()
+        # self.head = Corr_Up()
+
+
+class SiamFCRes22W(SiamFCRes22):
+    def __init__(self, **kwargs):
+        super(SiamFCRes22W, self).__init__(**kwargs)
+        self.features = ResNet22W()
+        # self.head = Corr_Up()
