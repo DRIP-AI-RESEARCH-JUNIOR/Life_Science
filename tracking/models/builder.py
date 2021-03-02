@@ -222,3 +222,16 @@ class SiamRPN(nn.Module):
         pred_regression = self.regress_adjust(self.xcorr(kernel_regression, conv_regression, 20))
 
         return pred_score, pred_regression
+
+
+class SiamRPNVGG(SiamRPN):
+    def __init__(self):
+        super(SiamRPNVGG, self).__init__()
+        self.features = Vgg()
+        self.mid()
+        self._initialize_weights()
+
+        # init weight with pretrained model
+        mod = models.vgg16(pretrained=True)
+        for i in xrange(len(self.features.state_dict().items()) - 2):
+            self.features.state_dict().items()[i][1].data[:] = mod.state_dict().items()[i][1].data[:]
