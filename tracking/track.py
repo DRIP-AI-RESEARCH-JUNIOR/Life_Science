@@ -2,6 +2,7 @@ import argparse
 import numpy as np
 import time
 import pandas as pd
+import cv2
 
 import torch
 from torch import nn
@@ -34,13 +35,37 @@ class SiamRPNPP_N(nn.Module):
         cls, loc = self.model.head(self.zf, xf)
         return loc, cls
 
-
 class SiamRPNPPRes50(SiamRPNPP_N):
     def __init__(self, tracker_name='SiamRPNPP'):
         super(SiamRPNPPRes50, self).__init__(tracker_name)
         self.cfg = {'lr': 0.45, 'window_influence': 0.44, 'penalty_k': 0.04, 'instance_size': 255, 'adaptive': False} # 0.355
 
 
+
+class VideoIterator(object):
+
+    def __init__(self, file_name):
+        self.file_name = file_name
+        self.FPS = cv2.VideoCapture(file_name).get(cv2.CAP_PROP_FPS)
+
+    def __iter__(self):
+        self.total_time = 0
+        self.cap = cv2.VideoCapture(self.file_name)
+        #self.FPS = self.cap.get(cv2.CAP_PROP_FPS)
+        if not self.cap.isOpened():
+            raise IOError('Video {} cannot be opened'.format(self.file_name))
+        return self
+
+    def __next__(self):
+        was_read, img = self.cap.read()
+        elapsed = self.cap.get(cv2.CAP_PROP_POS_MSEC)
+        #self.total_time += elapsed
+        
+        if not was_read:
+            self.cap.release()
+            raise StopIteration
+        return img, elapsed
+    
 if __name__=="__main__":
     
     model = SiamRPNPPRes50(cfg['model'])
