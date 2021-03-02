@@ -36,7 +36,7 @@ class SiamRPNPP_N(nn.Module):
         return loc, cls
 
 class SiamRPNPPRes50(SiamRPNPP_N):
-    def __init__(self, tracker_name='SiamRPNPP'):
+    def __init__(self, tracker_name=cfg["model"]):
         super(SiamRPNPPRes50, self).__init__(tracker_name)
         self.cfg = {'lr': 0.45, 'window_influence': 0.44, 'penalty_k': 0.04, 'instance_size': 255, 'adaptive': False} # 0.355
 
@@ -94,7 +94,7 @@ if __name__=="__main__":
         frame_count += 1
         if frame_count == 0:
             target_pos, target_sz = np.array([cx, cy]), np.array([w, h])
-            state = SiamRPN_init(im, target_pos, target_sz, model, 'SiamRPNPP')
+            state = SiamRPN_init(im, target_pos, target_sz, model, cfg["model"])
             weight_img = np.zeros_like(im)
             df.loc[frame_count] = [t, cx + (w/2), cy + (h/2)]
             continue
