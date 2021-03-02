@@ -40,3 +40,11 @@ class SiamRPNPPRes50(SiamRPNPP_N):
         super(SiamRPNPPRes50, self).__init__(tracker_name)
         self.cfg = {'lr': 0.45, 'window_influence': 0.44, 'penalty_k': 0.04, 'instance_size': 255, 'adaptive': False} # 0.355
 
+
+if __name__=="__main__":
+    
+    model = SiamRPNPPRes50(cfg['model'])
+    load_net(cfg['weight'], model)
+    model.eval().cuda()
+    
+    
