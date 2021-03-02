@@ -165,3 +165,60 @@ class SiamFCRes22W(SiamFCRes22):
         super(SiamFCRes22W, self).__init__(**kwargs)
         self.features = ResNet22W()
         # self.head = Corr_Up()
+
+
+class SiamRPN(nn.Module):
+    def __init__(self):
+        super(SiamRPN, self).__init__()
+        self.width = int(256)
+        self.height = int(256)
+        self.header = torch.IntTensor([0, 0, 0, 0])
+        self.seen = 0
+        self.features = AlexNet()
+
+        self.regress_adjust = nn.Conv2d(4 * 5, 4 * 5, 1)
+        self.mid()
+        self._initialize_weights()
+
+    def mid(self):
+        self.conv_cls1 = nn.Conv2d(self.features.feature_channel, self.features.feature_channel * 2 * 5, kernel_size=3,
+                                   stride=1, padding=0)
+        self.conv_r1 = nn.Conv2d(self.features.feature_channel, self.features.feature_channel * 4 * 5, kernel_size=3,
+                                 stride=1, padding=0)
+        self.conv_cls2 = nn.Conv2d(self.features.feature_channel, self.features.feature_channel, kernel_size=3,
+                                   stride=1, padding=0)
+        self.conv_r2 = nn.Conv2d(self.features.feature_channel, self.features.feature_channel, kernel_size=3, stride=1,
+                                 padding=0)
+
+    def _initialize_weights(self):
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                nn.init.normal_(m.weight, std=0.01)
+                if m.bias is not None:
+                    nn.init.constant_(m.bias, 0)
+            elif isinstance(m, nn.BatchNorm2d):
+                nn.init.constant_(m.weight, 1)
+                nn.init.constant_(m.bias, 0)
+
+    def xcorr(self, z, x, channels):
+        out = []
+        kernel_size = z.data.size()[-1]
+        for i in range(x.size(0)):
+            out.append(F.conv2d(x[i, :, :, :].unsqueeze(0),
+                                z[i, :, :, :].unsqueeze(0).view(channels, self.features.feature_channel, kernel_size, kernel_size)))
+
+        return torch.cat(out, dim=0)
+
+    def forward(self, template, detection):
+        template_feature = self.features(template)
+        detection_feature = self.features(detection)
+
+        kernel_score = self.conv_cls1(template_feature)
+        kernel_regression = self.conv_r1(template_feature)
+        conv_score = self.conv_cls2(detection_feature)
+        conv_regression = self.conv_r2(detection_feature)
+
+        pred_score = self.xcorr(kernel_score, conv_score, 10)
+        pred_regression = self.regress_adjust(self.xcorr(kernel_regression, conv_regression, 20))
+
+        return pred_score, pred_regression
