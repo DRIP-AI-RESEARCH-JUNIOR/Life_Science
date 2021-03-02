@@ -237,3 +237,25 @@ class SiamRPNVGG(SiamRPN):
             self.features.state_dict().items()[i][1].data[:] = mod.state_dict().items()[i][1].data[:]
 
                       
+class SiamRPNRes22(SiamRPN):
+    def __init__(self):
+        super(SiamRPNRes22, self).__init__()
+        self.features = ResNet22()
+        self.mid()
+        self._initialize_weights()
+
+
+class SiamRPNIncep22(SiamRPN):
+    def __init__(self):
+        super(SiamRPNIncep22, self).__init__()
+        self.features = Incep22()
+        self.mid()
+        self._initialize_weights()
+
+
+class SiamRPNResNeXt22(SiamRPN):
+    def __init__(self):
+        super(SiamRPNResNeXt22, self).__init__()
+        self.features = ResNeXt22()
+        self.mid()
+        self._initialize_weights()
