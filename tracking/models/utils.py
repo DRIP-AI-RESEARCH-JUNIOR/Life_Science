@@ -18,3 +18,11 @@ def check_keys(model, pretrained_state_dict):
     # print('used keys:{}'.format(used_pretrained_keys))
     assert len(used_pretrained_keys) > 0, 'load NONE from pretrained checkpoint'
     return True
+
+def remove_prefix(state_dict, prefix):
+    '''
+    Old style model is stored with all names of parameters share common prefix 'module.'
+    '''
+    print('remove prefix \'{}\''.format(prefix))
+    f = lambda x: x.split(prefix, 1)[-1] if x.startswith(prefix) else x
+    return {f(key): value for key, value in state_dict.items()}
