@@ -72,4 +72,51 @@ if __name__=="__main__":
     load_net(cfg['weight'], model)
     model.eval().cuda()
     
-    
+    file_name = cfg["video"]
+    write_video = True
+    output_mp4 = file_name.split('.')[0]+'_tracked.mp4'
+    frame_provider = VideoIterator(file_name)
+    cx = 382.0
+    cy = 321.0
+    w = 30.0
+    h = 30.0
+
+    if cfg["output_video"]:
+        fourcc = cv2.VideoWriter_fourcc(*"MJPG")
+        writer = cv2.VideoWriter(output_mp4, fourcc, frame_provider.FPS,
+            (im.shape[1], im.shape[0]), True)
+        
+    # tracking and visualization
+    df = pd.DataFrame(columns=['time', 'X', 'Y'])
+    temp = (int(cx), int(cy))
+    frame_count = -1
+    for im, t in frame_provider:
+        frame_count += 1
+        if frame_count == 0:
+            target_pos, target_sz = np.array([cx, cy]), np.array([w, h])
+            state = SiamRPN_init(im, target_pos, target_sz, model, 'SiamRPNPP')
+            weight_img = np.zeros_like(im)
+            df.loc[frame_count] = [t, cx + (w/2), cy + (h/2)]
+            continue
+
+        state = SiamRPN_track(state, im)
+        res = cxy_wh_2_rect(state['target_pos'], state['target_sz'])
+        df.loc[frame_count] = [t, res[0] + res[2]/2, res[1] + res[3]/2]
+
+        res = [int(l) for l in res]
+        # print(res)
+        cv2.rectangle(im, (res[0], res[1]), (res[0] + res[2], res[1] + res[3]), (0, 255, 255), 3)
+        center = (int(res[0] + res[2]/2), int(res[1] + res[3]/2))
+
+        weight_img = cv2.line(weight_img, temp, center, (0, 0, 255), 5)
+        #centers.append(center)
+        #save_path = 'bio_frames_tracked/tracked_{}.png'.format(f)
+        im = cv2.addWeighted(im, 1, weight_img, 1, 0)
+
+        if cfg["output_video"]:
+            writer.write(im)
+        #cv2.imwrite(save_path, im)
+
+        temp = center
+    #print('Tracking Speed {:.1f}fps'.format((len(image_files)-1)/(toc/cv2.getTickFrequency())))
+    writer.release() 
