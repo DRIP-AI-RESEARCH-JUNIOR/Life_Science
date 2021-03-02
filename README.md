@@ -16,6 +16,11 @@ Open Git Bash and type the following code
 $ git clone https://github.com/DRIP-AI-RESEARCH-JUNIOR/Life_Science.git
 ```
 
+## pretrained model
+```sh
+$ gdown --id 1BV86AAjYMn50T1RfE8BkKkThlNZI1a-m
+```
+
 ## :rocket: Get started 
 1 - Install python latest version from the link provided in the prerequisite in your system.
 
