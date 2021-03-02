@@ -235,3 +235,5 @@ class SiamRPNVGG(SiamRPN):
         mod = models.vgg16(pretrained=True)
         for i in xrange(len(self.features.state_dict().items()) - 2):
             self.features.state_dict().items()[i][1].data[:] = mod.state_dict().items()[i][1].data[:]
+
+                      
