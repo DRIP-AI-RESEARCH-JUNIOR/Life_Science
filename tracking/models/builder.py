@@ -10,3 +10,5 @@ from .backbones import AlexNet, Vgg, ResNet22, Incep22, ResNeXt22, ResNet22W, re
 from neck import AdjustLayer, AdjustAllLayer
 from .utils import load_pretrain
 
+__all__ = ['SiamFC_', 'SiamFC', 'SiamVGG', 'SiamFCRes22', 'SiamFCIncep22', 'SiamFCNext22', 'SiamFCRes22W',
+           'SiamRPN', 'SiamRPNVGG', 'SiamRPNRes22', 'SiamRPNIncep22', 'SiamRPNResNeXt22', 'SiamRPNPP']
