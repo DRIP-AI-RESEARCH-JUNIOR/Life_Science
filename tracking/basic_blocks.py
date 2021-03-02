@@ -1,11 +1,26 @@
-import torch
-from torch import nn
-import torch.nn.functional as F
-import torch.nn.init as init
+# ------------------------------------------------------------------------------
+# Copyright (c) Microsoft
+# Licensed under the MIT License.
+# ------------------------------------------------------------------------------
 
-import numpy as np
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
 from collections import OrderedDict
 import math
+
+eps = 1e-5
+
+# -------------
+# Single Layer
+# -------------
+
+
+def conv3x3(in_planes, out_planes, stride=1, dilation=1):
+    """3x3 convolution with padding"""
+    return nn.Conv2d(in_planes, out_planes, kernel_size=3, stride=stride,
+                     padding=dilation, bias=False, dilation=dilation)
+
 
 def center_crop(x):
     """
@@ -24,15 +39,15 @@ def center_crop7(x):
 
     return x[:, :, 2:-2, 2:-2].contiguous()
 
+
 def conv1x1(in_planes, out_planes, stride=1):
     """1x1 convolution"""
     return nn.Conv2d(in_planes, out_planes, kernel_size=1, stride=stride, bias=False)
 
-def conv3x3(in_planes, out_planes, stride=1, dilation=1):
-    """3x3 convolution with padding"""
-    return nn.Conv2d(in_planes, out_planes, kernel_size=3, stride=stride,
-                     padding=dilation, bias=False, dilation=dilation)
-    
+
+# -------------------------------
+# Several Kinds Bottleneck Blocks
+# -------------------------------
 class Bottleneck_CI(nn.Module):
     """
     Bottleneck with center crop layer, utilized in CVPR2019 model
@@ -82,8 +97,9 @@ class Bottleneck_CI(nn.Module):
         out = center_crop(out)     # in-residual crop
 
         return out
-    
-    class Bottleneck_BIG_CI(nn.Module):
+
+
+class Bottleneck_BIG_CI(nn.Module):
     """
     Bottleneck with center crop layer, double channels in 3*3 conv layer in shortcut branch
     """
@@ -132,6 +148,11 @@ class Bottleneck_CI(nn.Module):
         out = center_crop(out)  # in-layer crop
 
         return out
+
+
+# ---------------------
+# ResNeXt Tools
+# ---------------------
 
 class ResNet(nn.Module):
     """
@@ -209,6 +230,10 @@ class ResNet(nn.Module):
 
         return x
 
+
+# --------------------------
+# Inception Tools (320, 640)
+# --------------------------
 class BasicConv2d_1x1(nn.Module):
     """
     1*1 branch of inception
@@ -336,6 +361,10 @@ class Inception(nn.Module):
 
         return x
 
+
+# --------------
+# ResNeXt Tools
+# --------------
 class BasicBlock_C(nn.Module):
     """
     increasing cardinality is a more effective way of
@@ -428,6 +457,9 @@ class ResNeXt(nn.Module):
         out = self.layer2(out)
 
         return out
+
+
+#  from pysot : https://github.com/STVIR/pysot
 
 class BasicBlock(nn.Module):
     expansion = 1
@@ -525,6 +557,7 @@ class Bottleneck(nn.Module):
 
         return out
 
+
 # for RPN++
 class ResNetPP(nn.Module):
     def __init__(self, block, layers, used_layers):
@@ -615,4 +648,3 @@ class ResNetPP(nn.Module):
             return out[0]
         else:
             return out
-
