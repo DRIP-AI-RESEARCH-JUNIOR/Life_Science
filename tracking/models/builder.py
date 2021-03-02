@@ -78,3 +78,40 @@ class SiamFC(SiamFC_):
             elif isinstance(m, nn.BatchNorm2d):
                 m.weight.data.fill_(1)
                 m.bias.data.zero_()
+
+                
+class SiamVGG(nn.Module):
+
+    def __init__(self):
+        super(SiamVGG, self).__init__()
+        self.features = Vgg()
+        self.bn_adjust = nn.BatchNorm2d(1)
+        self._initialize_weights()
+
+        # init weight with pretrained model
+        mod = models.vgg16(pretrained=True)
+        for i in xrange(len(self.features.state_dict().items()) - 2):
+            self.features.state_dict().items()[i][1].data[:] = mod.state_dict().items()[i][1].data[:]
+
+    def forward(self, z, x):
+        zf = self.features(z)
+        xf = self.features(x)
+        score = self.head(zf, xf)
+
+        return score
+
+    def head(self, z, x):
+        out = []
+        for i in range(x.size(0)):
+            out.append(F.conv2d(x[i, :, :, :].unsqueeze(0), z[i, :, :, :].unsqueeze(0)))
+
+        return self.bn_adjust(torch.cat(out, dim=0))
+
+    def _initialize_weights(self):
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
+                m.weight.data.normal_(0, math.sqrt(2. / n))
+            elif isinstance(m, nn.BatchNorm2d):
+                m.weight.data.fill_(1)
+                m.bias.data.zero_()
