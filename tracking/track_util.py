@@ -1,23 +1,14 @@
 import argparse
 import numpy as np
-import time
+import time, os, cv2
 import pandas as pd
-import cv2
 
 import torch
 from torch import nn
 
-from models.builder import SiamRPNPP
-from runRPN import SiamRPN_init, SiamRPN_track
-from utils import load_net, VideoIterator, cxy_wh_2_rect
-
-cfg = {
-    "model": "SiamRPNPP",
-    "video": "D:\DRIP-AI-RESEARCH-JUNIOR\Life_Science\tracking\VID_20210217_111359.mp4",
-    "weight": "D:\DRIP-AI-RESEARCH-JUNIOR\Life_Science\tracking\weight\SiamRPNPPRes50.pth",
-    "output_video": True
-}
-
+from tracking.models.builder import SiamRPNPP
+from tracking.runRPN import SiamRPN_init, SiamRPN_track
+from tracking.utils import load_net, VideoIterator, cxy_wh_2_rect
 
 class SiamRPNPP_N(nn.Module):
     def __init__(self, tracker_name):
@@ -37,12 +28,18 @@ class SiamRPNPP_N(nn.Module):
         return loc, cls
 
 class SiamRPNPPRes50(SiamRPNPP_N):
-    def __init__(self, tracker_name=cfg["model"]):
+    def __init__(self, tracker_name="SiamRPNPP"):
         super(SiamRPNPPRes50, self).__init__(tracker_name)
         self.cfg = {'lr': 0.45, 'window_influence': 0.44, 'penalty_k': 0.04, 'instance_size': 255, 'adaptive': False} # 0.355
 
+
+def first_frame(fname):
+    f_provider = VideoIterator(fname)
+    i = iter(f_provider)
+    img, elapsed = next(i)
+    return img
     
-if __name__=="__main__":
+def process_track(cfg):
     
     model = SiamRPNPPRes50(cfg['model'])
     load_net(cfg['weight'], model)
@@ -50,12 +47,13 @@ if __name__=="__main__":
     
     file_name = cfg["video"]
     write_video = True
-    output_mp4 = file_name.split('.')[0]+'_tracked.mp4'
+    output_mp4 = os.path.join(cfg["output_path"], os.path.basename(file_name).split('.')[0]+'_tracked.mp4')
+    # print("Output mp4 file : {}".format(output_mp4))
     frame_provider = VideoIterator(file_name)
-    cx = 382.0
-    cy = 321.0
-    w = 30.0
-    h = 30.0
+    cx = cfg["cx"]
+    cy = cfg["cy"]
+    w = cfg["w"]
+    h = cfg["h"]
         
     # tracking and visualization
     df = pd.DataFrame(columns=['Time', 'CX', 'CY', 'W', 'H', 'Score'])
@@ -102,5 +100,6 @@ if __name__=="__main__":
     
     print('Tracking Speed {:.1f}fps'.format(frame_count/(toc/cv2.getTickFrequency())))
     
-    save_csv = file_name.split('.')[0] + '.csv'
+    save_csv = os.path.join(cfg["output_path"], os.path.basename(file_name).split('.')[0] + '.csv')
+    # print("CSV file path {}".format(save_csv))
     df.to_csv(save_csv)
