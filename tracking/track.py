@@ -9,7 +9,7 @@ from torch import nn
 
 from models.builder import SiamRPNPP
 from runRPN import SiamRPN_init, SiamRPN_track
-from utils import load_net
+from utils import load_net, VideoIterator
 
 cfg = {
     "model": "SiamRPNPP",
@@ -40,31 +40,6 @@ class SiamRPNPPRes50(SiamRPNPP_N):
         super(SiamRPNPPRes50, self).__init__(tracker_name)
         self.cfg = {'lr': 0.45, 'window_influence': 0.44, 'penalty_k': 0.04, 'instance_size': 255, 'adaptive': False} # 0.355
 
-
-
-class VideoIterator(object):
-
-    def __init__(self, file_name):
-        self.file_name = file_name
-        self.FPS = cv2.VideoCapture(file_name).get(cv2.CAP_PROP_FPS)
-
-    def __iter__(self):
-        self.total_time = 0
-        self.cap = cv2.VideoCapture(self.file_name)
-        #self.FPS = self.cap.get(cv2.CAP_PROP_FPS)
-        if not self.cap.isOpened():
-            raise IOError('Video {} cannot be opened'.format(self.file_name))
-        return self
-
-    def __next__(self):
-        was_read, img = self.cap.read()
-        elapsed = self.cap.get(cv2.CAP_PROP_POS_MSEC)
-        #self.total_time += elapsed
-        
-        if not was_read:
-            self.cap.release()
-            raise StopIteration
-        return img, elapsed
     
 if __name__=="__main__":
     
@@ -80,11 +55,6 @@ if __name__=="__main__":
     cy = 321.0
     w = 30.0
     h = 30.0
-
-    if cfg["output_video"]:
-        fourcc = cv2.VideoWriter_fourcc(*"MJPG")
-        writer = cv2.VideoWriter(output_mp4, fourcc, frame_provider.FPS,
-            (im.shape[1], im.shape[0]), True)
         
     # tracking and visualization
     df = pd.DataFrame(columns=['time', 'X', 'Y'])
@@ -93,6 +63,12 @@ if __name__=="__main__":
     for im, t in frame_provider:
         frame_count += 1
         if frame_count == 0:
+            
+            if cfg["output_video"]:
+                fourcc = cv2.VideoWriter_fourcc(*"MJPG")
+                writer = cv2.VideoWriter(output_mp4, fourcc, frame_provider.FPS,
+                    (im.shape[1], im.shape[0]), True)
+            
             target_pos, target_sz = np.array([cx, cy]), np.array([w, h])
             state = SiamRPN_init(im, target_pos, target_sz, model, cfg["model"])
             weight_img = np.zeros_like(im)
