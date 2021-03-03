@@ -3,6 +3,28 @@ import torch
 import numpy as np
 
 
+class VideoIterator(object):
+
+    def __init__(self, file_name):
+        self.file_name = file_name
+
+    def __iter__(self):
+        self.total_time = 0
+        self.cap = cv2.VideoCapture(self.file_name)
+        self.FPS = self.cap.get(cv2.CAP_PROP_FPS)
+        if not self.cap.isOpened():
+            raise IOError('Video {} cannot be opened'.format(self.file_name))
+        return self
+
+    def __next__(self):
+        was_read, img = self.cap.read()
+        elapsed = self.cap.get(cv2.CAP_PROP_POS_MSEC)
+        
+        if not was_read:
+            raise StopIteration
+        return img, elapsed
+
+
 def load_net(fname, net):
     pretrained_dict = torch.load(fname)
     pretrained_dict = {'model.'+key: value for key, value in pretrained_dict.items()}
