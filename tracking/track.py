@@ -9,7 +9,7 @@ from torch import nn
 
 from models.builder import SiamRPNPP
 from runRPN import SiamRPN_init, SiamRPN_track
-from utils import load_net, VideoIterator
+from utils import load_net, VideoIterator, cxy_wh_2_rect
 
 cfg = {
     "model": "SiamRPNPP",
@@ -57,10 +57,12 @@ if __name__=="__main__":
     h = 30.0
         
     # tracking and visualization
-    df = pd.DataFrame(columns=['time', 'X', 'Y'])
+    df = pd.DataFrame(columns=['Time', 'CX', 'CY', 'W', 'H', 'Score'])
     temp = (int(cx), int(cy))
     frame_count = -1
+    toc = 0
     for im, t in frame_provider:
+        tic = cv2.getTickCount()
         frame_count += 1
         if frame_count == 0:
             
@@ -71,23 +73,20 @@ if __name__=="__main__":
             
             target_pos, target_sz = np.array([cx, cy]), np.array([w, h])
             state = SiamRPN_init(im, target_pos, target_sz, model, cfg["model"])
+            toc += cv2.getTickCount()-tic
+            res = cxy_wh_2_rect(state['target_pos'], state['target_sz'])
             weight_img = np.zeros_like(im)
-            df.loc[frame_count] = [t, cx + (w/2), cy + (h/2)]
+            df.loc[frame_count] = [t, *res, 1]
             continue
 
         state = SiamRPN_track(state, im)
+        toc += cv2.getTickCount()-tic
         res = cxy_wh_2_rect(state['target_pos'], state['target_sz'])
-        df.loc[frame_count] = [t, res[0] + res[2]/2, res[1] + res[3]/2]
+        df.loc[frame_count] = [t, *res, state['score']]
 
         res = [int(l) for l in res]
-        # print(res)
         
-        center = (int(res[0] + res[2]/2), int(res[1] + res[3]/2))
-
-        
-        #centers.append(center)
-        #save_path = 'bio_frames_tracked/tracked_{}.png'.format(f)
-        
+        center = (int(res[0] + res[2]/2), int(res[1] + res[3]/2))        
 
         if cfg["output_video"]:
             cv2.rectangle(im, (res[0], res[1]), (res[0] + res[2], res[1] + res[3]), (0, 255, 255), 3)
@@ -95,11 +94,12 @@ if __name__=="__main__":
             im = cv2.addWeighted(im, 1, weight_img, 1, 0)
             
             writer.write(im)
-        #cv2.imwrite(save_path, im)
 
         temp = center
-    #print('Tracking Speed {:.1f}fps'.format((len(image_files)-1)/(toc/cv2.getTickFrequency())))
-    writer.release() 
 
+    writer.release() 
+    
+    print('Tracking Speed {:.1f}fps'.format(frame_count/(toc/cv2.getTickFrequency())))
+    
     save_csv = file_name.split('.')[0] + '.csv'
     df.to_csv(save_csv)
