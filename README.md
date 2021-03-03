@@ -24,6 +24,6 @@ $ gdown --id 1BV86AAjYMn50T1RfE8BkKkThlNZI1a-m
 ## :rocket: Get started 
 1 - Install python latest version from the link provided in the prerequisite in your system.
 
-2 - Double click the ExeGenerator.bat file.
+2 - Double click the GUI runner.bat file.
 
-3 - The generated exe file shall be located in EXE_File folder.
+3 - The bat file shall be execute the process.py file.
