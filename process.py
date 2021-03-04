@@ -41,7 +41,7 @@ class MyLabel(QLabel):
     def mouseReleaseEvent(self, event):
         self.flag = False     
         cfg["cx"], cfg["cy"], cfg["w"], cfg["h"] = self.x0, self.y0, abs(self.x1 - self.x0), abs(self.y1 - self.y0)
-        print(cfg)
+        # print(cfg)
         #
 
     def mouseMoveEvent(self, event):
@@ -204,11 +204,13 @@ class Ui_MainWindow(object):
             self.centralwidget.lb.setGeometry(QRect(35, 165, 980, 530))
             self.img = first_frame(fname)
             height, width, bytesPerComponent = self.img.shape
+            self.factor = width/945
             bytesPerLine = 3 * width
             cv2.cvtColor(self.img, cv2.COLOR_BGR2RGB, self.img)
             QImg = QImage(self.img.data, width, height,
                           bytesPerLine, QImage.Format_RGB888)
             pixmap = QPixmap.fromImage(QImg)
+            pixmap = pixmap.scaled(945, 945, QtCore.Qt.KeepAspectRatio)
             self.centralwidget.lb.setPixmap(pixmap)
             self.centralwidget.lb.setCursor(Qt.CrossCursor)         
             self.centralwidget.lb.show()
@@ -222,7 +224,9 @@ class Ui_MainWindow(object):
 
     def final_process(self):
         if "cx" in cfg.keys() and "output_path" in cfg.keys():
-            self.progress.setText("Processing")
+            # print("Factor", self.factor)
+            cfg["cx"], cfg["cy"], cfg["w"], cfg["h"] = int(
+                cfg["cx"]*self.factor), int(cfg["cy"]*self.factor), int(cfg["w"]*self.factor), int(cfg["h"]*self.factor)
             process_track(cfg)
             self.progress.setText("Processed")
         else:

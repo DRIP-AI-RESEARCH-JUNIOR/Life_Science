@@ -40,6 +40,7 @@ def first_frame(fname):
     return img
     
 def process_track(cfg):
+    # print(cfg)
     
     model = SiamRPNPPRes50(cfg['model'])
     load_net(cfg['weight'], model)
@@ -73,9 +74,9 @@ def process_track(cfg):
             target_pos, target_sz = np.array([cx, cy]), np.array([w, h])
             state = SiamRPN_init(im, target_pos, target_sz, model, cfg["model"])
             toc += cv2.getTickCount()-tic
-            res = cxy_wh_2_rect(state['target_pos'], state['target_sz'])
+            # res = cxy_wh_2_rect(state['target_pos'], state['target_sz'])
             weight_img = np.zeros_like(im)
-            df.loc[frame_count] = [t, *res, 1]
+            df.loc[frame_count] = [t, cx, cy, w, h, 1]
             continue
 
         state = SiamRPN_track(state, im)
