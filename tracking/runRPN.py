@@ -170,7 +170,7 @@ def SiamRPN_init(im, target_pos, target_sz, net, net_name):
                              std=[0.229, 0.224, 0.225])])
     z = Variable(transform(z_crop).unsqueeze(0))
 
-    net.temple(z.cuda())
+    net.temple(z)
 
     if p.windowing == 'cosine':
         window = np.outer(np.hanning(p.score_size), np.hanning(p.score_size))
@@ -212,7 +212,7 @@ def SiamRPN_track(state, im):
                              std=[0.229, 0.224, 0.225])])
     x_crop = Variable(transform(x_crop).unsqueeze(0))
 
-    target_pos, target_sz, score = tracker_eval(net, x_crop.cuda(), target_pos, target_sz * scale_z, window, scale_z, p)
+    target_pos, target_sz, score = tracker_eval(net, x_crop, target_pos, target_sz * scale_z, window, scale_z, p)
     target_pos[0] = max(0, min(state['im_w'], target_pos[0]))
     target_pos[1] = max(0, min(state['im_h'], target_pos[1]))
     target_sz[0] = max(10, min(state['im_w'], target_sz[0]))
