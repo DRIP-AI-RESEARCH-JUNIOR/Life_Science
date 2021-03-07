@@ -44,7 +44,7 @@ def process_track(cfg):
     
     model = SiamRPNPPRes50(cfg['model'])
     load_net(cfg['weight'], model)
-    model.eval()
+    model.eval().cuda()
     
     file_name = cfg["video"]
     write_video = True

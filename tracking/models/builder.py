@@ -135,8 +135,8 @@ class SiamFCRes22(SiamFC_):
                                 # it is suitable for SoftMarginLoss, but not suitable for BCEWithLogitsLoss.
         pred = pred.view(-1)
         label = label.view(-1)
-        pos = Variable(label.data.eq(1).nonzero().squeeze())
-        neg = Variable(label.data.eq(0).nonzero().squeeze())
+        pos = Variable(label.data.eq(1).nonzero().squeeze()).cuda()
+        neg = Variable(label.data.eq(0).nonzero().squeeze()).cuda()
 
         loss_pos = self._cls_loss(pred, label, pos)
         loss_neg = self._cls_loss(pred, label, neg)
