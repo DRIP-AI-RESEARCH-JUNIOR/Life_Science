@@ -20,7 +20,7 @@ from tracking.track_util import process_track, first_frame
 
 cfg = {
     "model": "SiamRPNPP",
-    "weight": os.path.join(os.getcwd(), "weight\\SiamRPNPPRes50.pth"),
+    "weight": os.path.join(os.getcwd(), "weight\\SiamRPNPPRes50_cpu.pth"),
     "output_video": True
 }
 
